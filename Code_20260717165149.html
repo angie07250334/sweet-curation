@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍬 Sweet Curation — 我的文章策展台</title>
+<style>
+  /* ========== 马卡龙配色变量 ========== */
+  :root {
+    --pink:        #FFD6E7;
+    --pink-deep:   #FF9EBD;
+    --lavender:    #E8D5FF;
+    --lavender-d:  #C9A0FF;
+    --mint:        #C5F5E0;
+    --mint-deep:   #7EDDB5;
+    --peach:       #FFD4C2;
+    --peach-deep:  #FFAA88;
+    --butter:      #FFF3C4;
+    --butter-deep: #FFD966;
+    --sky:         #CDE8FF;
+    --sky-deep:    #8CC8FF;
+    --bg:          #FFF8FA;
+    --card:        #FFFFFFEE;
+    --text:        #5A4A5E;
+    --text-light:  #8C7C90;
+    --shadow:      0 4px 20px rgba(200, 170, 200, 0.25);
+    --shadow-lg:   0 8px 40px rgba(200, 170, 200, 0.35);
+    --radius:      20px;
+    --radius-sm:   12px;
+    --transition:  all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ========== 全局重置 ========== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans CJK SC', 'WenQuanYi Micro Hei', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ========== 背景装饰 ========== */
+  .bg-decor {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+  }
+  .bg-decor span {
+    position: absolute; border-radius: 50%; opacity: 0.4; animation: float 20s infinite ease-in-out;
+  }
+  .bg-decor span:nth-child(1) { width: 300px; height: 300px; background: var(--pink); top: -80px; left: -60px; animation-delay: 0s; }
+  .bg-decor span:nth-child(2) { width: 200px; height: 200px; background: var(--lavender); top: 40%; right: -40px; animation-delay: -5s; }
+  .bg-decor span:nth-child(3) { width: 250px; height: 250px; background: var(--mint); bottom: -60px; left: 20%; animation-delay: -10s; }
+  .bg-decor span:nth-child(4) { width: 180px; height: 180px; background: var(--peach); bottom: 20%; right: 10%; animation-delay: -15s; }
+  .bg-decor span:nth-child(5) { width: 160px; height: 160px; background: var(--butter); top: 60%; left: 50%; animation-delay: -7s; }
+  .bg-decor span:nth-child(6) { width: 220px; height: 220px; background: var(--sky); top: 10%; right: 30%; animation-delay: -12s; }
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(30px, -40px) scale(1.05); }
+    66%      { transform: translate(-20px, 30px) scale(0.95); }
+  }
+
+  /* ========== 顶部导航 ========== */
+  .navbar {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: rgba(255, 248, 250, 0.85);
+    border-bottom: 1px solid rgba(255, 200, 220, 0.3);
+    padding: 14px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 22px; font-weight: 700; color: var(--text);
+  }
+  .nav-brand .logo { font-size: 28px; }
+  .nav-links { display: flex; gap: 6px; }
+  .nav-links a {
+    padding: 8px 18px; border-radius: 50px; text-decoration: none;
+    color: var(--text-light); font-size: 14px; font-weight: 500;
+    transition: var(--transition);
+  }
+  .nav-links a:hover, .nav-links a.active {
+    background: var(--pink); color: var(--text); font-weight: 600;
+  }
+  .nav-actions { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    padding: 9px 20px; border: none; border-radius: 50px; cursor: pointer;
+    font-size: 14px; font-weight: 600; transition: var(--transition);
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--pink-deep), var(--lavender-d));
+    color: #fff; box-shadow: 0 2px 12px rgba(255, 158, 189, 0.4);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(255, 158, 189, 0.5); }
+  .btn-ghost {
+    background: transparent; color: var(--text-light); border: 1.5px solid var(--pink);
+  }
+  .btn-ghost:hover { background: var(--pink); color: var(--text); }
+
+  /* ========== 主内容区 ========== */
+  .main-content { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+  /* ========== 页面切换 ========== */
+  .page { display: none; animation: fadeIn 0.4s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ========== Hero / Spotlight ========== */
+  .hero {
+    background: linear-gradient(135deg, var(--pink) 0%, var(--lavender) 50%, var(--sky) 100%);
+    border-radius: var(--radius); padding: 40px; margin-bottom: 32px;
+    position: relative; overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .hero::after {
+    content: '✨'; position: absolute; top: 20px; right: 30px; font-size: 40px; opacity: 0.6;
+  }
+  .hero-label {
+    display: inline-block; background: rgba(255,255,255,0.7); padding: 4px 14px;
+    border-radius: 50px; font-size: 12px; font-weight: 600; color: var(--pink-deep);
+    margin-bottom: 12px;
+  }
+  .hero h1 { font-size: 32px; color: var(--text); margin-bottom: 10px; }
+  .hero p { font-size: 15px; color: var(--text-light); line-height: 1.7; max-width: 600px; }
+  .hero-actions { margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* ========== 分类标签 ========== */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 36px 0 18px;
+  }
+  .section-title {
+    font-size: 20px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .emoji { font-size: 24px; }
+  .filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-tab {
+    padding: 6px 16px; border-radius: 50px; border: 1.5px solid transparent;
+    background: var(--card); font-size: 13px; cursor: pointer; transition: var(--transition);
+    color: var(--text-light); font-family: inherit; font-weight: 500;
+  }
+  .filter-tab:hover { border-color: var(--pink); }
+  .filter-tab.active {
+    background: var(--pink); color: var(--text); font-weight: 600; border-color: var(--pink-deep);
+  }
+
+  /* ========== 文章书架网格 ========== */
+  .articles-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .article-card {
+    background: var(--card); border-radius: var(--radius); padding: 24px;
+    box-shadow: var(--shadow); transition: var(--transition);
+    border-top: 4px solid var(--pink-deep);
+    position: relative; overflow: hidden;
+  }
+  .article-card:nth-child(5n+2) { border-top-color: var(--lavender-d); }
+  .article-card:nth-child(5n+3) { border-top-color: var(--mint-deep); }
+  .article-card:nth-child(5n+4) { border-top-color: var(--peach-deep); }
+  .article-card:nth-child(5n+5) { border-top-color: var(--sky-deep); }
+  .article-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+  .article-card .cat-badge {
+    display: inline-block; padding: 3px 12px; border-radius: 50px;
+    font-size: 11px; font-weight: 600; margin-bottom: 12px;
+  }
+  .cat-badge.culture  { background: var(--lavender); color: #7C5CBF; }
+  .cat-badge.design   { background: var(--pink); color: #D45B8A; }
+  .cat-badge.tech     { background: var(--sky); color: #4A90C4; }
+  .cat-badge.life     { background: var(--mint); color: #3DA87D; }
+  .cat-badge.art      { background: var(--butter); color: #C49A2A; }
+  .cat-badge.psych    { background: var(--peach); color: #D4763A; }
+  .article-card h3 { font-size: 17px; margin-bottom: 8px; line-height: 1.4; color: var(--text); }
+  .article-card .desc { font-size: 13px; color: var(--text-light); line-height: 1.6; margin-bottom: 14px; }
+  .article-card .meta { display: flex; justify-content: space-between; align-items: center; }
+  .article-card .source { font-size: 12px; color: var(--text-light); }
+  .article-card .actions { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg); transition: var(--transition); font-size: 14px;
+  }
+  .icon-btn:hover { background: var(--pink); transform: scale(1.1); }
+  .icon-btn.favorited { background: var(--pink); }
+
+  /* ========== Newsletter 时间线 ========== */
+  .newsletter-list { display: flex; flex-direction: column; gap: 20px; }
+  .newsletter-item {
+    background: var(--card); border-radius: var(--radius); padding: 28px;
+    box-shadow: var(--shadow); transition: var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .newsletter-item::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+    background: linear-gradient(180deg, var(--pink-deep), var(--lavender-d));
+    border-radius: 20px 0 0 20px;
+  }
+  .newsletter-item:hover { transform: translateX(4px); box-shadow: var(--shadow-lg); }
+  .nl-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .nl-title { font-size: 18px; font-weight: 700; color: var(--text); }
+  .nl-date { font-size: 12px; color: var(--text-light); white-space: nowrap; }
+  .nl-desc { font-size: 14px; color: var(--text-light); line-height: 1.7; margin-bottom: 16px; }
+  .nl-stats { display: flex; gap: 16px; font-size: 12px; color: var(--text-light); }
+  .nl-stats span { display: flex; align-items: center; gap: 4px; }
+  .nl-preview {
+    display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;
+  }
+  .nl-preview .mini-chip {
+    padding: 4px 12px; border-radius: 50px; font-size: 11px;
+    background: var(--pink); color: var(--text); font-weight: 500;
+  }
+
+  /* ========== 收藏段落 ========== */
+  .favorites-list { display: flex; flex-direction: column; gap: 16px; }
+  .fav-item {
+    background: var(--card); border-radius: var(--radius-sm); padding: 20px 24px;
+    box-shadow: var(--shadow); border-left: 4px solid var(--butter-deep);
+    transition: var(--transition);
+  }
+  .fav-item:hover { transform: translateX(4px); }
+  .fav-quote { font-size: 14px; line-height: 1.8; color: var(--text); font-style: italic; margin-bottom: 10px; }
+  .fav-meta { display: flex; justify-content: space-between; align-items: center; }
+  .fav-source { font-size: 12px; color: var(--text-light); }
+  .fav-actions { display: flex; gap: 6px; }
+
+  /* ========== 添加文章弹窗 ========== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(90, 74, 94, 0.3); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
+  .modal {
+    background: #fff; border-radius: var(--radius); padding: 36px;
+    width: 90%; max-width: 520px; box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .modal h2 { font-size: 20px; margin-bottom: 20px; color: var(--text); }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--pink);
+    border-radius: var(--radius-sm); font-size: 14px; font-family: inherit;
+    color: var(--text); background: var(--bg); transition: var(--transition);
+    outline: none;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    border-color: var(--pink-deep); box-shadow: 0 0 0 3px rgba(255, 158, 189, 0.15);
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* ========== 空状态 ========== */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text-light);
+  }
+  .empty-state .big-emoji { font-size: 64px; margin-bottom: 16px; }
+  .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+  .empty-state p { font-size: 14px; }
+
+  /* ========== Toast 通知 ========== */
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--text); color: #fff; padding: 12px 28px; border-radius: 50px;
+    font-size: 14px; font-weight: 500; z-index: 300; opacity: 0;
+    transition: all 0.3s ease; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ========== 分享弹窗 ========== */
+  .share-options { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+  .share-btn {
+    width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    transition: var(--transition);
+  }
+  .share-btn:hover { transform: scale(1.15); }
+  .share-btn.wechat { background: #C5F5E0; }
+  .share-btn.weibo  { background: #FFD4C2; }
+  .share-btn.link   { background: #CDE8FF; }
+  .share-btn.xiaohongshu { background: #FFD6E7; }
+
+  /* ========== 响应式 ========== */
+  @media (max-width: 768px) {
+    .navbar { padding: 12px 16px; }
+    .nav-links { display: none; }
+    .hero { padding: 28px 20px; }
+    .hero h1 { font-size: 24px; }
+    .main-content { padding: 20px 14px; }
+    .articles-grid { grid-template-columns: 1fr; }
+    .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+
+  /* ========== 高亮引用块 ========== */
+  .highlight-box {
+    background: linear-gradient(135deg, var(--butter), var(--pink));
+    border-radius: var(--radius-sm); padding: 16px 20px; margin: 12px 0;
+    font-size: 14px; line-height: 1.8; color: var(--text); font-style: italic;
+    border-left: 4px solid var(--butter-deep);
+  }
+
+  /* ========== 统计卡片 ========== */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--card); border-radius: var(--radius-sm); padding: 20px;
+    text-align: center; box-shadow: var(--shadow);
+  }
+  .stat-card .num { font-size: 28px; font-weight: 700; color: var(--pink-deep); }
+  .stat-card .label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- 背景装饰 -->
+<div class="bg-decor">
+  <span></span><span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<!-- 顶部导航 -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <span class="logo">🍬</span>
+    <span>Sweet Curation</span>
+  </div>
+  <div class="nav-links">
+    <a href="#" class="active" data-page="home">🏠 首页</a>
+    <a href="#" data-page="library">📚 策展库</a>
+    <a href="#" data-page="newsletter">📮 Newsletter</a>
+    <a href="#" data-page="favorites">⭐ 收藏段落</a>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-ghost" onclick="openModal()">＋ 添加文章</button>
+    <button class="btn btn-primary" onclick="showToast('🎉 已复制到剪贴板！')">🔗 分享</button>
+  </div>
+</nav>
+
+<!-- 主内容 -->
+<div class="main-content">
+
+  <!-- ========== 首页 ========== -->
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <span class="hero-label">✨ Spotlight</span>
+      <h1>欢迎来到你的文章策展台</h1>
+      <p>像编辑一本杂志一样，精心挑选来自网页、公众号、各类 App 上遇见的好文章。把它们按主题分类、收藏心动段落，定期打包成美丽的 Newsletter 分享给朋友。</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="switchPage('library')">📖 浏览策展库</button>
+        <button class="btn btn-ghost" onclick="switchPage('newsletter')">📮 查看 Newsletter</button>
+      </div>
+    </div>
+
+    <!-- 统计概览 -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="num" id="stat-total">0</div><div class="label">📄 收录文章</div></div>
+      <div class="stat-card"><div class="num" id="stat-cats">0</div><div class="label">🏷️ 分类数</div></div>
+      <div class="stat-card"><div class="num" id="stat-favs">0</div><div class="label">⭐ 收藏段落</div></div>
+      <div class="stat-card"><div class="num" id="stat-news">0</div><div class="label">📮 Newsletter 期数</div></div>
+    </div>
+
+    <!-- 最新策展 -->
+    <div class="section-header">
+      <div class="section-title"><span class="emoji">📌</span> 最新收录</div>
+      <a href="#" style="font-size:13px;color:var(--pink-deep);text-decoration:none;" onclick="switchPage('library')">查看全部 →</a>
+    </div>
+    <div class="articles-grid" id="recent-articles"></div>
+  </div>
+
+  <!-- ========== 策展库 ========== -->
+  <div class="page" id="page-library">
+    <div class="section-header">
+      <div class="section-title"><span class="emoji">📚</span> 我的策展书架</div>
+      <button class="btn btn-primary" onclick="openModal()">＋ 添加文章</button>
+    </div>
+    <div class="filter-tabs" id="filter-tabs"></div>
+    <div style="height:16px"></div>
+    <div class="articles-grid" id="articles-grid"></div>
+  </div>
+
+  <!-- ========== Newsletter ========== -->
+  <div class="page" id="page-newsletter">
+    <div class="section-header">
+      <div class="section-title"><span class="emoji">📮</span> Newsletter Curation</div>
+      <button class="btn btn-primary" onclick="createNewsletter()">✏️ 创建新一期</button>
+    </div>
+    <div class="newsletter-list" id="newsletter-list"></div>
+  </div>
+
+  <!-- ========== 收藏段落 ========== -->
+  <div class="page" id="page-favorites">
+    <div class="section-header">
+      <div class="section-title"><span class="emoji">⭐</span> 收藏的段落</div>
+    </div>
+    <div class="favorites-list" id="favorites-list"></div>
+  </div>
+
+</div>
+
+<!-- 添加文章弹窗 -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>🍬 添加新文章</h2>
+    <div class="form-group">
+      <label>文章标题</label>
+      <input type="text" id="f-title" placeholder="输入文章标题...">
+    </div>
+    <div class="form-group">
+      <label>来源 / 公众号 / App</label>
+      <input type="text" id="f-source" placeholder="如：微信公众号「XXX」">
+    </div>
+    <div class="form-group">
+      <label>链接 URL</label>
+      <input type="text" id="f-url" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label>分类</label>
+      <select id="f-category">
+        <option value="culture">🎭 文化</option>
+        <option value="design">🎨 设计</option>
+        <option value="tech">💻 科技</option>
+        <option value="life">🌿 生活</option>
+        <option value="art">🖼️ 艺术</option>
+        <option value="psych">🧠 心理</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>简短描述</label>
+      <textarea id="f-desc" placeholder="用一两句话描述这篇文章为什么值得收藏..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>收藏段落（可选）</label>
+      <textarea id="f-quote" placeholder="把文章中打动你的段落粘贴在这里..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="addArticle()">✨ 添加到策展库</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== 数据层（localStorage 持久化） ==========
+const STORAGE_KEY = 'sweet_curation_data';
+const DEFAULT_DATA = {
+  articles: [
+    {
+      id: 1, title: '为什么我们越来越喜欢「小而美」的事物？',
+      source: '微信公众号 · 单读', url: '#',
+      category: 'culture', desc: '从日本侘寂美学到北欧 Hygge 生活哲学，探讨当代人对「微小幸福」的集体渴望。',
+      quote: '美不是一种天赋，而是一种选择。在每个日常瞬间里，选择看见光。',
+      date: '2026-07-15', favorited: true
+    },
+    {
+      id: 2, title: '色彩心理学：马卡龙色系为什么让人感到治愈？',
+      source: 'Web · 设计达人', url: '#',
+      category: 'design', desc: '低饱和高明度的色彩如何悄悄影响我们的情绪和决策。',
+      quote: '',
+      date: '2026-07-12', favorited: false
+    },
+    {
+      id: 3, title: 'AI 时代，写作还有意义吗？',
+      source: 'App · 少数派', url: '#',
+      category: 'tech', desc: '当机器可以生成一切文字，人类写作的价值正在被重新定义。',
+      quote: '写作不是为了产出文本，而是为了认识自己。',
+      date: '2026-07-10', favorited: true
+    },
+    {
+      id: 4, title: '在城市里养一盆植物吧',
+      source: '微信公众号 · 简单生活', url: '#',
+      category: 'life', desc: '不需要大阳台，十种适合出租屋的懒人植物推荐。',
+      quote: '',
+      date: '2026-07-08', favorited: false
+    },
+    {
+      id: 5, title: '卢浮宫没有告诉你的事：策展的艺术',
+      source: 'Web · 艺术界', url: '#',
+      category: 'art', desc: '一件艺术品的价值，一半来自创作，一半来自策展。',
+      quote: '策展人是故事的编织者，把碎片连成星河。',
+      date: '2026-07-05', favorited: true
+    },
+    {
+      id: 6, title: '「慢」是一种能力，不是一种态度',
+      source: '微信公众号 ·  KnowYourself', url: '#',
+      category: 'psych', desc: '为什么我们明明想慢下来，却总是停不下来？',
+      quote: '允许自己什么都不做，是最难的自我关怀。',
+      date: '2026-07-03', favorited: true
+    },
+  ],
+  newsletters: [
+    {
+      id: 1, title: 'Vol.01 · 夏日微风特辑',
+      date: '2026-07-15', desc: '这一期收录了关于「慢生活」和「小而美」的 6 篇文章，希望它们能像一阵微风，吹散你心头的燥热。',
+      articleIds: [1, 4, 6], tag: '夏日'
+    },
+    {
+      id: 2, title: 'Vol.02 · 色彩与灵魂',
+      date: '2026-07-01', desc: '关于设计、艺术和色彩心理学的精选阅读，让我们一起探索视觉背后的情感密码。',
+      articleIds: [2, 5], tag: '美学'
+    },
+  ],
+  favorites: [
+    { id: 1, quote: '美不是一种天赋，而是一种选择。在每个日常瞬间里，选择看见光。', source: '为什么我们越来越喜欢「小而美」的事物？', articleId: 1, date: '2026-07-15' },
+    { id: 2, quote: '写作不是为了产出文本，而是为了认识自己。', source: 'AI 时代，写作还有意义吗？', articleId: 3, date: '2026-07-10' },
+    { id: 3, quote: '策展人是故事的编织者，把碎片连成星河。', source: '卢浮宫没有告诉你的事', articleId: 5, date: '2026-07-05' },
+    { id: 4, quote: '允许自己什么都不做，是最难的自我关怀。', source: '「慢」是一种能力', articleId: 6, date: '2026-07-03' },
+  ]
+};
+
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || JSON.parse(JSON.stringify(DEFAULT_DATA));
+let currentFilter = 'all';
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+// ========== 工具函数 ==========
+const CAT_MAP = {
+  culture: { label: '文化', cls: 'culture', icon: '🎭' },
+  design:  { label: '设计', cls: 'design',  icon: '🎨' },
+  tech:    { label: '科技', cls: 'tech',    icon: '💻' },
+  life:    { label: '生活', cls: 'life',    icon: '🌿' },
+  art:     { label: '艺术', cls: 'art',     icon: '🖼️' },
+  psych:   { label: '心理', cls: 'psych',   icon: '🧠' },
+};
+
+function catInfo(cat) { return CAT_MAP[cat] || { label: cat, cls: 'culture', icon: '📄' }; }
+
+function formatDate(d) {
+  const dt = new Date(d);
+  return dt.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ========== 页面切换 ==========
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.querySelector(`.nav-links a[data-page="${page}"]`).classList.add('active');
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', e => { e.preventDefault(); switchPage(a.dataset.page); });
+});
+
+// ========== 弹窗 ==========
+function openModal() { document.getElementById('modal-overlay').classList.add('active'); }
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+}
+
+// ========== 添加文章 ==========
+function addArticle() {
+  const title = document.getElementById('f-title').value.trim();
+  const source = document.getElementById('f-source').value.trim();
+  const url = document.getElementById('f-url').value.trim();
+  const category = document.getElementById('f-category').value;
+  const desc = document.getElementById('f-desc').value.trim();
+  const quote = document.getElementById('f-quote').value.trim();
+
+  if (!title) return showToast('⚠️ 请填写文章标题');
+
+  const article = {
+    id: Date.now(), title, source: source || '未知来源', url: url || '#',
+    category, desc: desc || '暂无描述', quote,
+    date: new Date().toISOString().slice(0, 10), favorited: false
+  };
+  data.articles.unshift(article);
+
+  if (quote) {
+    data.favorites.unshift({
+      id: Date.now(), quote, source: title, articleId: article.id,
+      date: new Date().toISOString().slice(0, 10)
+    });
+  }
+
+  save();
+  closeModal();
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-source').value = '';
+  document.getElementById('f-url').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-quote').value = '';
+  showToast('🎉 文章已添加到策展库！');
+  render();
+}
+
+// ========== 收藏切换 ==========
+function toggleFavorite(id) {
+  const a = data.articles.find(x => x.id === id);
+  if (!a) return;
+  a.favorited = !a.favorited;
+  save();
+  render();
+  showToast(a.favorited ? '⭐ 已收藏！' : '💔 已取消收藏');
+}
+
+// ========== 删除文章 ==========
+function deleteArticle(id) {
+  if (!confirm('确定要删除这篇文章吗？')) return;
+  data.articles = data.articles.filter(x => x.id !== id);
+  data.favorites = data.favorites.filter(x => x.articleId !== id);
+  save();
+  render();
+  showToast('🗑️ 已删除');
+}
+
+// ========== 创建 Newsletter ==========
+function createNewsletter() {
+  if (!data.articles.length) return showToast('⚠️ 先添加一些文章吧');
+  const title = prompt('给这期 Newsletter 起个名字吧：', `Vol.0${data.newsletters.length + 1} · 新一期策展`);
+  if (!title) return;
+  const desc = prompt('写一段简短的编辑手记：', '这一期收录了最近读到的一些好文章，希望你喜欢 ✨') || '';
+  const tag = prompt('给它一个标签：', '精选') || '精选';
+
+  // 自动选取最新3篇，或所有文章（如果不足3篇）
+  const selected = data.articles.slice(0, Math.min(3, data.articles.length)).map(a => a.id);
+
+  const nl = {
+    id: Date.now(), title, date: new Date().toISOString().slice(0, 10),
+    desc, articleIds: selected, tag
+  };
+  data.newsletters.unshift(nl);
+  save();
+  render();
+  showToast('📮 新一期 Newsletter 已创建！');
+}
+
+// ========== 分享 ==========
+function shareNewsletter(id) {
+  const nl = data.newsletters.find(x => x.id === id);
+  if (!nl) return;
+  const text = `🍬 ${nl.title}\n${nl.desc}\n\n来自 Sweet Curation ✨`;
+  if (navigator.share) {
+    navigator.share({ title: nl.title, text, url: location.href });
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('📋 已复制分享文案到剪贴板！'));
+  }
+}
+
+// ========== 渲染函数 ==========
+function renderStats() {
+  document.getElementById('stat-total').textContent = data.articles.length;
+  document.getElementById('stat-cats').textContent = new Set(data.articles.map(a => a.category)).size;
+  document.getElementById('stat-favs').textContent = data.favorites.length;
+  document.getElementById('stat-news').textContent = data.newsletters.length;
+}
+
+function renderArticleCard(a) {
+  const cat = catInfo(a.category);
+  return `
+    <div class="article-card">
+      <span class="cat-badge ${cat.cls}">${cat.icon} ${cat.label}</span>
+      <h3>${a.title}</h3>
+      <p class="desc">${a.desc}</p>
+      ${a.quote ? `<div class="highlight-box">"${a.quote}"</div>` : ''}
+      <div class="meta">
+        <span class="source">📍 ${a.source} · ${formatDate(a.date)}</span>
+        <div class="actions">
+          <button class="icon-btn ${a.favorited ? 'favorited' : ''}" onclick="toggleFavorite(${a.id})" title="收藏">${a.favorited ? '⭐' : '☆'}</button>
+          <button class="icon-btn" onclick="deleteArticle(${a.id})" title="删除">🗑️</button>
+          <a class="icon-btn" href="${a.url}" target="_blank" title="打开原文">🔗</a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderHome() {
+  const recent = data.articles.slice(0, 3);
+  document.getElementById('recent-articles').innerHTML = recent.length
+    ? recent.map(renderArticleCard).join('')
+    : '<div class="empty-state"><div class="big-emoji">📭</div><h3>还没有文章</h3><p>点击右上角「添加文章」开始策展吧</p></div>';
+}
+
+function renderLibrary() {
+  // 分类标签
+  const cats = ['all', ...new Set(data.articles.map(a => a.category))];
+  document.getElementById('filter-tabs').innerHTML = cats.map(c => {
+    const label = c === 'all' ? '🌸 全部' : catInfo(c).icon + ' ' + catInfo(c).label;
+    return `<button class="filter-tab ${c === currentFilter ? 'active' : ''}" onclick="setFilter('${c}')">${label}</button>`;
+  }).join('');
+
+  const list = currentFilter === 'all' ? data.articles : data.articles.filter(a => a.category === currentFilter);
+  document.getElementById('articles-grid').innerHTML = list.length
+    ? list.map(renderArticleCard).join('')
+    : '<div class="empty-state"><div class="big-emoji">🔍</div><h3>这个分类下还没有文章</h3><p>去添加一些吧</p></div>';
+}
+
+function renderNewsletter() {
+  const container = document.getElementById('newsletter-list');
+  if (!data.newsletters.length) {
+    container.innerHTML = '<div class="empty-state"><div class="big-emoji">📮</div><h3>还没有创建 Newsletter</h3><p>点击「创建新一期」开始你的策展之旅</p></div>';
+    return;
+  }
+  container.innerHTML = data.newsletters.map(nl => {
+    const articles = data.articles.filter(a => nl.articleIds.includes(a.id));
+    return `
+      <div class="newsletter-item">
+        <div class="nl-header">
+          <div class="nl-title">${nl.title}</div>
+          <div class="nl-date">📅 ${formatDate(nl.date)}</div>
+        </div>
+        <p class="nl-desc">${nl.desc}</p>
+        <div class="nl-stats">
+          <span>📄 ${articles.length} 篇文章</span>
+          <span>🏷️ ${nl.tag}</span>
+        </div>
+        <div class="nl-preview">
+          ${articles.map(a => `<span class="mini-chip">${catInfo(a.category).icon} ${a.title.slice(0, 16)}${a.title.length > 16 ? '…' : ''}</span>`).join('')}
+        </div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="shareNewsletter(${nl.id})">📤 分享这期</button>
+          <button class="btn btn-ghost" onclick="viewNewsletter(${nl.id})">📖 阅读全文</button>
+          <button class="btn btn-ghost" onclick="deleteNewsletter(${nl.id})" style="margin-left:auto;color:var(--text-light);">🗑️ 删除</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderFavorites() {
+  const container = document.getElementById('favorites-list');
+  if (!data.favorites.length) {
+    container.innerHTML = '<div class="empty-state"><div class="big-emoji">⭐</div><h3>还没有收藏段落</h3><p>在添加文章时粘贴喜欢的段落，它们会出现在这里</p></div>';
+    return;
+  }
+  container.innerHTML = data.favorites.map(f => `
+    <div class="fav-item">
+      <div class="fav-quote">"${f.quote}"</div>
+      <div class="fav-meta">
+        <span class="fav-source">📖 来自《${f.source}》· ${formatDate(f.date)}</span>
+        <div class="fav-actions">
+          <button class="icon-btn" onclick="copyQuote('${f.quote.replace(/'/g, "\\'")}')" title="复制">📋</button>
+          <button class="icon-btn" onclick="deleteFavorite(${f.id})" title="删除">🗑️</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function copyQuote(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('📋 段落已复制！'));
+}
+
+function deleteFavorite(id) {
+  if (!confirm('删除这段收藏？')) return;
+  data.favorites = data.favorites.filter(x => x.id !== id);
+  save();
+  render();
+  showToast('🗑️ 已删除');
+}
+
+function deleteNewsletter(id) {
+  if (!confirm('确定删除这期 Newsletter 吗？')) return;
+  data.newsletters = data.newsletters.filter(x => x.id !== id);
+  save();
+  render();
+  showToast('🗑️ 已删除');
+}
+
+function viewNewsletter(id) {
+  const nl = data.newsletters.find(x => x.id === id);
+  if (!nl) return;
+  const articles = data.articles.filter(a => nl.articleIds.includes(a.id));
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay active';
+  overlay.style.zIndex = '250';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:680px;max-height:85vh;overflow-y:auto;" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <span class="hero-label">📮 ${nl.tag}</span>
+          <h2 style="margin-top:8px;color:var(--text);">${nl.title}</h2>
+          <p style="font-size:12px;color:var(--text-light);margin-top:4px;">📅 ${formatDate(nl.date)} · ${articles.length} 篇文章</p>
+        </div>
+        <button class="icon-btn" onclick="this.closest('.modal-overlay').remove()" style="font-size:18px;">✕</button>
+      </div>
+      <p style="font-size:14px;color:var(--text-light);line-height:1.8;margin:16px 0;padding:16px;background:var(--bg);border-radius:12px;">📝 ${nl.desc}</p>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        ${articles.map((a, i) => {
+          const cat = catInfo(a.category);
+          return `
+          <div style="border:1.5px solid var(--pink);border-radius:14px;padding:18px;background:linear-gradient(135deg, ${cat.cls === 'culture' ? 'var(--lavender)' : cat.cls === 'design' ? 'var(--pink)' : cat.cls === 'tech' ? 'var(--sky)' : cat.cls === 'life' ? 'var(--mint)' : cat.cls === 'art' ? 'var(--butter)' : 'var(--peach)'}, transparent 70%);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span style="font-size:13px;font-weight:700;color:var(--text);">${i + 1}.</span>
+              <span class="cat-badge ${cat.cls}">${cat.icon} ${cat.label}</span>
+            </div>
+            <h4 style="font-size:15px;color:var(--text);margin-bottom:6px;">${a.title}</h4>
+            <p style="font-size:13px;color:var(--text-light);line-height:1.6;">${a.desc}</p>
+            ${a.quote ? `<div class="highlight-box" style="margin-top:8px;">"${a.quote}"</div>` : ''}
+            <p style="font-size:11px;color:var(--text-light);margin-top:8px;">📍 ${a.source}</p>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">关闭</button>
+        <button class="btn btn-primary" onclick="shareNewsletter(${nl.id});this.closest('.modal-overlay').remove();">📤 分享这期</button>
+      </div>
+    </div>
+  `;
+  overlay.addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
+}
+
+function setFilter(cat) {
+  currentFilter = cat;
+  renderLibrary();
+}
+
+// ========== 总渲染 ==========
+function render() {
+  renderStats();
+  renderHome();
+  renderLibrary();
+  renderNewsletter();
+  renderFavorites();
+}
+
+// ========== 初始化 ==========
+render();
+</script>
+</body>
+</html>
